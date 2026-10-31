@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Operativo y Productividad WMS</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for Excel Reading -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-effect {
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.15), 0 8px 10px -6px rgba(59, 130, 246, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 md:p-8">
+
+    <!-- HEADER & FILE UPLOADER -->
+    <header class="flex flex-col md:flex-row justify-between items-center mb-8 bg-slate-900/80 p-6 rounded-2xl glass-card glow-effect gap-4">
+        <div>
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-500/30">
+                    <i data-lucide="layout-dashboard" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">Dashboard de Productividad & Operaciones WMS</h1>
+                    <p class="text-slate-400 text-sm">Control avanzado de rendimiento, volúmenes, horas y OEE por procesos</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+            <label for="excel-file-input" class="cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm border border-blue-400/20">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Cargar Archivo Excel / CSV</span>
+            </label>
+            <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden">
+        </div>
+    </header>
+
+    <!-- KPI CARDS SUMMARY -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+        <div class="glass-card p-5 rounded-2xl border-l-4 border-blue-500 relative overflow-hidden">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Volumen SCMS Total</p>
+                    <h3 id="kpi-volumen" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl"><i data-lucide="boxes" class="w-6 h-6"></i></div>
+            </div>
+            <div class="mt-3 flex items-center text-xs text-slate-400"><span id="kpi-volumen-lm" class="text-blue-400 font-semibold mr-1">0</span> Produc Total LM</div>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border-l-4 border-indigo-500 relative overflow-hidden">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Horas Ejecutadas</p>
+                    <h3 id="kpi-horas" class="text-3xl font-extrabold text-white mt-1">0</h3>
+                </div>
+                <div class="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl"><i data-lucide="clock" class="w-6 h-6"></i></div>
+            </div>
+            <div class="mt-3 flex items-center text-xs text-slate-400"><span id="kpi-dif-horas" class="font-semibold mr-1">0</span> Dif Total de Horas</div>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border-l-4 border-emerald-500 relative overflow-hidden">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">OEE Promedio Global</p>
+                    <h3 id="kpi-oee" class="text-3xl font-extrabold text-white mt-1">0%</h3>
+                </div>
+                <div class="p-2.5 bg-emerald-500/10 text-emerald-400 rounded-xl"><i data-lucide="activity" class="w-6 h-6"></i></div>
+            </div>
+            <div class="mt-3 flex items-center text-xs text-emerald-400 font-medium"><span>Eficiencia General de Equipos</span></div>
+        </div>
+
+        <div class="glass-card p-5 rounded-2xl border-l-4 border-amber-500 relative overflow-hidden">
+            <div class="flex justify-between items-start">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Calidad Promedio</p>
+                    <h3 id="kpi-calidad" class="text-3xl font-extrabold text-white mt-1">0%</h3>
+                </div>
+                <div class="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl"><i data-lucide="shield-check" class="w-6 h-6"></i></div>
+            </div>
+            <div class="mt-3 flex items-center text-xs text-amber-400 font-medium"><span>Precisión y Calidad Operativa</span></div>
+        </div>
+    </div>
+
+    <!-- PROCESS FILTER TABS -->
+    <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-6 no-scrollbar" id="process-tabs">
+        <button onclick="filterProcess('ALL')" class="process-tab active px-5 py-2.5 rounded-xl font-medium text-sm transition-all bg-blue-600 text-white shadow-lg shadow-blue-600/30 whitespace-nowrap">Todos los Procesos</button>
+    </div>
+
+    <!-- CHARTS GRID SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Bar Chart: Rendimiento vs OEE -->
+        <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg text-white flex items-center gap-2">
+                    <i data-lucide="bar-chart-3" class="w-5 h-5 text-blue-400"></i> Rendimiento y OEE por Sub-Proceso
+                </h3>
+            </div>
+            <div class="relative h-80 w-full">
+                <canvas id="barChartRendimiento"></canvas>
+            </div>
+        </div>
+
+        <!-- Line Chart: Dif Horas (Desviación) -->
+        <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg text-white flex items-center gap-2">
+                    <i data-lucide="trending-up" class="w-5 h-5 text-indigo-400"></i> Análisis de Desviación de Horas (Dif Horas)
+                </h3>
+            </div>
+            <div class="relative h-80 w-full">
+                <canvas id="lineChartHoras"></canvas>
+            </div>
+        </div>
+
+        <!-- Doughnut Chart: Volumen por Proceso -->
+        <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg text-white flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-5 h-5 text-emerald-400"></i> Distribución de Volumen SCMS por Proceso
+                </h3>
+            </div>
+            <div class="relative h-80 w-full flex justify-center">
+                <canvas id="doughnutVolumen"></canvas>
+            </div>
+        </div>
+
+        <!-- Doughnut Chart: Horas Ejecutadas por Proceso -->
+        <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg text-white flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-5 h-5 text-amber-400"></i> Distribución de Horas Ejecutadas por Proceso
+                </h3>
+            </div>
+            <div class="relative h-80 w-full flex justify-center">
+                <canvas id="doughnutHoras"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- DETAILED DATA TABLE -->
+    <div class="glass-card rounded-2xl overflow-hidden mb-12">
+        <div class="p-6 border-b border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <h3 class="font-semibold text-lg text-white flex items-center gap-2">
+                <i data-lucide="table" class="w-5 h-5 text-blue-400"></i> Detalle Operativo de Sub-Procesos
+            </h3>
+            <div class="w-full md:w-72">
+                <input type="text" id="table-search" placeholder="Buscar sub-proceso..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500">
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <tr class="bg-slate-900/90 text-slate-400 uppercase text-xs tracking-wider border-b border-slate-800">
+                        <th class="p-4 font-semibold">Proceso</th>
+                        <th class="p-4 font-semibold">Sub-Proceso</th>
+                        <th class="p-4 font-text-right">Volumen SCMS</th>
+                        <th class="p-4 font-text-right">Horas Ejec.</th>
+                        <th class="p-4 font-text-right">% Efectividad</th>
+                        <th class="p-4 font-text-right">Rendimiento</th>
+                        <th class="p-4 font-text-right">Dif Horas</th>
+                        <th class="p-4 font-text-right">% Calidad</th>
+                        <th class="p-4 font-text-right">OEE</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body" class="divide-y divide-slate-800/60 text-slate-300">
+                    <!-- Populated via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        let rawData = [
+            {proceso: "Inbound", subproceso: "Receiving", prod: 145, vol: 56805, horas: 392, prod2: 144.9, efect: 1.0, prodLm: 84441, rend: 0.67, hrsLm: 582, dif: 190, cal: 21, pCal: 1.0, oee: 0.67},
+            {proceso: "Inbound", subproceso: "Buy Local", prod: 10, vol: 281, horas: 28, prod2: 9.9, efect: 0.99, prodLm: 286, rend: 0.98, hrsLm: 29, dif: 0, cal: 0, pCal: 1.0, oee: 0.97},
+            {proceso: "Inbound", subproceso: "Weighing (pesaje)", prod: 40, vol: 6570, horas: 150, prod2: 43.8, efect: 1.1, prodLm: 4773, rend: 1.38, hrsLm: 112, dif: -37, cal: 0, pCal: 1.0, oee: 1.51},
+            {proceso: "Inbound", subproceso: "Cubiscan", prod: 60, vol: 6776, horas: 125, prod2: 54.3, efect: 0.9, prodLm: 9515, rend: 0.71, hrsLm: 159, dif: 34, cal: 0, pCal: 1.0, oee: 0.64},
+            {proceso: "Replenishment", subproceso: "Ubicación RP", prod: 22, vol: 47657, horas: 2142, prod2: 22.2, efect: 1.01, prodLm: 59339, rend: 0.8, hrsLm: 2697, dif: 555, cal: 293, pCal: 0.994, oee: 0.81},
+            {proceso: "Replenishment", subproceso: "Buffer Cleanning", prod: 35, vol: 11124, horas: 318, prod2: 35.0, efect: 1.0, prodLm: 6668, rend: 1.67, hrsLm: 191, dif: -127, cal: 25, pCal: 0.998, oee: 1.66},
+            {proceso: "Replenishment", subproceso: "Last remaining Loc", prod: 51, vol: 1676, horas: 38, prod2: 43.8, efect: 0.86, prodLm: 627, rend: 2.67, hrsLm: 12, dif: -26, cal: 0, pCal: 1.0, oee: 2.29},
+            {proceso: "Devoluciones", subproceso: "Ecom Returns receiving", prod: 90, vol: 9175, horas: 87, prod2: 105.6, efect: 1.17, prodLm: 7315, rend: 1.25, hrsLm: 81, dif: -6, cal: 0, pCal: 1.0, oee: 1.47},
+            {proceso: "Devoluciones", subproceso: "Ecom Returns scanning", prod: 30, vol: 12675, horas: 526, prod2: 24.1, efect: 0.8, prodLm: 16084, rend: 0.79, hrsLm: 536, dif: 11, cal: 0, pCal: 1.0, oee: 0.63},
+            {proceso: "Devoluciones", subproceso: "Put away Ecom Returns", prod: 50, vol: 12737, horas: 249, prod2: 51.2, efect: 1.02, prodLm: 12194, rend: 1.04, hrsLm: 244, dif: -5, cal: 132, pCal: 0.99, oee: 1.06},
+            {proceso: "Devoluciones", subproceso: "Commercial Returns receiving", prod: 200, vol: 329, horas: 5, prod2: 66.6, efect: 0.33, prodLm: 1004, rend: 0.33, hrsLm: 5, dif: 0, cal: 0, pCal: 1.0, oee: 0.11},
+            {proceso: "Devoluciones", subproceso: "Commercial Returns Inspection", prod: 72.9, vol: 3030, horas: 51, prod2: 59.1, efect: 0.81, prodLm: 3743, rend: 0.81, hrsLm: 51, dif: 0, cal: 0, pCal: 1.0, oee: 0.66},
+            {proceso: "Devoluciones", subproceso: "Put away Commercial Returns", prod: 150, vol: 926, horas: 9, prod2: 108.9, efect: 0.73, prodLm: 1278, rend: 0.72, hrsLm: 9, dif: 0, cal: 0, pCal: 1.0, oee: 0.53},
+            {proceso: "Devoluciones", subproceso: "Returns Issues", prod: 20, vol: 5326, horas: 305, prod2: 17.5, efect: 0.87, prodLm: 6294, rend: 0.85, hrsLm: 315, dif: 10, cal: 0, pCal: 1.0, oee: 0.74},
+            {proceso: "B2B", subproceso: "Picking Piece pick FTW", prod: 128, vol: 197140, horas: 1581, prod2: 124.7, efect: 0.97, prodLm: 265879, rend: 0.74, hrsLm: 2077, dif: 496, cal: 242, pCal: 0.999, oee: 0.72},
+            {proceso: "B2B", subproceso: "Picking Piece pick Hard&App", prod: 286, vol: 337390, horas: 1209, prod2: 279.0, efect: 0.98, prodLm: 400773, rend: 0.84, hrsLm: 1401, dif: 192, cal: 448, pCal: 0.999, oee: 0.82},
+            {proceso: "B2B", subproceso: "Packing piece pick", prod: 319, vol: 557621, horas: 1759, prod2: 317.1, efect: 0.99, prodLm: 564528, rend: 0.99, hrsLm: 1770, dif: 11, cal: 17, pCal: 1.0, oee: 0.98},
+            {proceso: "B2B", subproceso: "Packing Handstack", prod: 101, vol: 14149, horas: 145, prod2: 97.4, efect: 0.96, prodLm: 7134, rend: 1.98, hrsLm: 71, dif: -75, cal: 0, pCal: 1.0, oee: 1.91},
+            {proceso: "B2C", subproceso: "Picking ecom single orders", prod: 60, vol: 69694, horas: 1188, prod2: 58.6, efect: 0.98, prodLm: 88483, rend: 0.79, hrsLm: 1475, dif: 286, cal: 92, pCal: 0.999, oee: 0.77},
+            {proceso: "B2C", subproceso: "Picking ecom Wall", prod: 60, vol: 57040, horas: 978, prod2: 58.3, efect: 0.97, prodLm: 37561, rend: 1.52, hrsLm: 626, dif: -352, cal: 71, pCal: 0.999, oee: 1.47},
+            {proceso: "B2C", subproceso: "Picking ecom big orders", prod: 25, vol: 3345, horas: 139, prod2: 24.1, efect: 0.96, prodLm: 1316, rend: 2.54, hrsLm: 53, dif: -86, cal: 2, pCal: 0.999, oee: 2.45},
+            {proceso: "B2C", subproceso: "Packing ecom", prod: 90, vol: 132953, horas: 1523, prod2: 87.3, efect: 0.97, prodLm: 135226, rend: 0.98, hrsLm: 1503, dif: -20, cal: 0, pCal: 1.0, oee: 0.95},
+            {proceso: "Shipping", subproceso: "Staging Consilidation", prod: 125, vol: 50901, horas: 407, prod2: 125.2, efect: 1.0, prodLm: 34419, rend: 1.48, hrsLm: 275, dif: -131, cal: 0, pCal: 1.0, oee: 1.48},
+            {proceso: "Shipping", subproceso: "Dispatch Piece Pick", prod: 125, vol: 44575, horas: 356, prod2: 125.2, efect: 1.0, prodLm: 56802, rend: 0.78, hrsLm: 454, dif: 98, cal: 0, pCal: 1.0, oee: 0.79},
+            {proceso: "Shipping", subproceso: "Dispatch ecom", prod: 320, vol: 95443, horas: 297, prod2: 320.9, efect: 1.0, prodLm: 83516, rend: 1.14, hrsLm: 261, dif: -36, cal: 0, pCal: 1.0, oee: 1.15},
+            {proceso: "IRA", subproceso: "Cycle Count", prod: 700, vol: 129013, horas: 240, prod2: 537.9, efect: 0.77, prodLm: 85432, rend: 1.51, hrsLm: 122, dif: -118, cal: 795, pCal: 0.994, oee: 1.15},
+            {proceso: "IRA", subproceso: "Miss units search", prod: 120, vol: 30835, horas: 255, prod2: 120.7, efect: 1.01, prodLm: 82257, rend: 0.37, hrsLm: 685, dif: 430, cal: 0, pCal: 1.0, oee: 0.38},
+            {proceso: "IRA", subproceso: "Empty Loc audit", prod: 110, vol: 0, horas: 0, prod2: 0.0, efect: 0.0, prodLm: 710, rend: 0.0, hrsLm: 6, dif: 6, cal: 0, pCal: 0.0, oee: 0.0},
+            {proceso: "Montacargas", subproceso: "Put Away Handstack", prod: 120, vol: 55601, horas: 442, prod2: 125.8, efect: 1.05, prodLm: 73308, rend: 0.76, hrsLm: 611, dif: 169, cal: 29, pCal: 0.999, oee: 0.79},
+            {proceso: "Montacargas", subproceso: "Forklift RPL", prod: 100, vol: 46027, horas: 544, prod2: 84.6, efect: 0.85, prodLm: 75491, rend: 0.61, hrsLm: 755, dif: 211, cal: 0, pCal: 1.0, oee: 0.52},
+            {proceso: "Montacargas", subproceso: "Picking Handstack/Rack", prod: 100, vol: 14149, horas: 166, prod2: 85.2, efect: 0.85, prodLm: 19368, rend: 0.73, hrsLm: 194, dif: 28, cal: 45, pCal: 0.997, oee: 0.62},
+            {proceso: "Montacargas", subproceso: "HSA consolidation", prod: 100, vol: 9138, horas: 113, prod2: 81.1, efect: 0.81, prodLm: 13632, rend: 0.67, hrsLm: 136, dif: 24, cal: 0, pCal: 1.0, oee: 0.54},
+            {proceso: "Montacargas", subproceso: "Cycle count HSA", prod: 530, vol: 43343, horas: 89, prod2: 484.7, efect: 0.91, prodLm: 25015, rend: 1.73, hrsLm: 47, dif: -42, cal: 119, pCal: 0.997, oee: 1.58}
+        ];
+
+        let currentFilter = 'ALL';
+        let barChart, lineChart, doughnutVol, doughnutHrs;
+
+        function initDashboard() {
+            renderTabs();
+            updateKPIs(rawData);
+            renderCharts(rawData);
+            renderTable(rawData);
+            setupSearch();
+            lucide.createIcons();
+        }
+
+        function renderTabs() {
+            const processes = ['ALL', ...new Set(rawData.map(item => item.proceso))];
+            const container = document.getElementById('process-tabs');
+            container.innerHTML = processes.map(proc => `
+                <button onclick="filterProcess('${proc}')" class="process-tab px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${currentFilter === proc ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : 'bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800'} whitespace-nowrap">
+                    ${proc === 'ALL' ? 'Todos los Procesos' : proc}
+                </button>
+            `).join('');
+        }
+
+        function filterProcess(proc) {
+            currentFilter = proc;
+            renderTabs();
+            const filteredData = proc === 'ALL' ? rawData : rawData.filter(item => item.proceso === proc);
+            updateKPIs(filteredData);
+            updateCharts(filteredData);
+            renderTable(filteredData);
+        }
+
+        function updateKPIs(data) {
+            const totalVol = data.reduce((acc, curr) => acc + curr.vol, 0);
+            const totalVolLm = data.reduce((acc, curr) => acc + curr.prodLm, 0);
+            const totalHoras = data.reduce((acc, curr) => acc + curr.horas, 0);
+            const totalDif = data.reduce((acc, curr) => acc + curr.dif, 0);
+            const avgOee = data.length > 0 ? (data.reduce((acc, curr) => acc + curr.oee, 0) / data.length) * 100 : 0;
+            const avgCal = data.length > 0 ? (data.reduce((acc, curr) => acc + curr.pCal, 0) / data.length) * 100 : 0;
+
+            document.getElementById('kpi-volumen').innerText = totalVol.toLocaleString();
+            document.getElementById('kpi-volumen-lm').innerText = totalVolLm.toLocaleString();
+            document.getElementById('kpi-horas').innerText = totalHoras.toLocaleString();
+            document.getElementById('kpi-dif-horas').innerText = totalDif.toLocaleString();
+            document.getElementById('kpi-oee').innerText = avgOee.toFixed(1) + '%';
+            document.getElementById('kpi-calidad').innerText = avgCal.toFixed(1) + '%';
+        }
+
+        function renderCharts(data) {
+            // Bar Chart: Rendimiento vs OEE
+            const ctxBar = document.getElementById('barChartRendimiento').getContext('2d');
+            barChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.subproceso),
+                    datasets: [
+                        {
+                            label: 'Rendimiento',
+                            data: data.map(d => (d.rend * 100).toFixed(1)),
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'OEE (%)',
+                            data: data.map(d => (d.oee * 100).toFixed(1)),
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+
+            // Line Chart: Desviación de Horas
+            const ctxLine = document.getElementById('lineChartHoras').getContext('2d');
+            lineChart = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.subproceso),
+                    datasets: [{
+                        label: 'Diferencia de Horas (Dif Horas)',
+                        data: data.map(d => d.dif),
+                        borderColor: 'rgba(99, 102, 241, 1)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgba(99, 102, 241, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    }
+                }
+            });
+
+            // Doughnut: Volumen por Proceso (Agrupado)
+            const groupedVol = groupByProcess(data, 'vol');
+            const ctxDonutVol = document.getElementById('doughnutVolumen').getContext('2d');
+            doughnutVol = new Chart(ctxDonutVol, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(groupedVol),
+                    datasets: [{
+                        data: Object.values(groupedVol),
+                        backgroundColor: ['#3b82f6', '#6366f1', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#14b8a6', '#f43f5e']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#94a3b8', boxWidth: 12 } } }
+                }
+            });
+
+            // Doughnut: Horas por Proceso (Agrupado)
+            const groupedHrs = groupByProcess(data, 'horas');
+            const ctxDonutHrs = document.getElementById('doughnutHoras').getContext('2d');
+            doughnutHrs = new Chart(ctxDonutHrs, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(groupedHrs),
+                    datasets: [{
+                        data: Object.values(groupedHrs),
+                        backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#ec4899', '#6366f1', '#14b8a6', '#8b5cf6', '#f43f5e']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right', labels: { color: '#94a3b8', boxWidth: 12 } } }
+                }
+            });
+        }
+
+        function updateCharts(data) {
+            barChart.data.labels = data.map(d => d.subproceso);
+            barChart.data.datasets[0].data = data.map(d => (d.rend * 100).toFixed(1));
+            barChart.data.datasets[1].data = data.map(d => (d.oee * 100).toFixed(1));
+            barChart.update();
+
+            lineChart.data.labels = data.map(d => d.subproceso);
+            lineChart.data.datasets[0].data = data.map(d => d.dif);
+            lineChart.update();
+
+            const groupedVol = groupByProcess(data, 'vol');
+            doughnutVol.data.labels = Object.keys(groupedVol);
+            doughnutVol.data.datasets[0].data = Object.values(groupedVol);
+            doughnutVol.update();
+
+            const groupedHrs = groupByProcess(data, 'horas');
+            doughnutHrs.data.labels = Object.keys(groupedHrs);
+            doughnutHrs.data.datasets[0].data = Object.values(groupedHrs);
+            doughnutHrs.update();
+        }
+
+        function groupByProcess(data, key) {
+            return data.reduce((acc, curr) => {
+                acc[curr.proceso] = (acc[curr.proceso] || 0) + curr[key];
+                return acc;
+            }, {});
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = data.map(row => `
+                <tr class="hover:bg-slate-800/40 transition-colors">
+                    <td class="p-4 font-medium text-white">${row.proceso}</td>
+                    <td class="p-4 text-slate-300">${row.subproceso}</td>
+                    <td class="p-4 text-right font-mono">${row.vol.toLocaleString()}</td>
+                    <td class="p-4 text-right font-mono">${row.horas.toLocaleString()}</td>
+                    <td class="p-4 text-right font-mono text-blue-400">${(row.efect * 100).toFixed(0)}%</td>
+                    <td class="p-4 text-right font-mono">${(row.rend * 100).toFixed(0)}%</td>
+                    <td class="p-4 text-right font-mono ${row.dif > 0 ? 'text-rose-400 font-semibold' : 'text-emerald-400'}">${row.dif}</td>
+                    <td class="p-4 text-right font-mono">${(row.pCal * 100).toFixed(1)}%</td>
+                    <td class="p-4 text-right font-mono font-semibold ${row.oee >= 1 ? 'text-emerald-400' : 'text-amber-400'}">${(row.oee * 100).toFixed(0)}%</td>
+                </tr>
+            `).join('');
+        }
+
+        function setupSearch() {
+            document.getElementById('table-search').addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const filtered = rawData.filter(item => 
+                    item.subproceso.toLowerCase().includes(term) || item.proceso.toLowerCase().includes(term)
+                );
+                renderTable(filtered);
+            });
+        }
+
+        // Excel file import listener
+        document.getElementById('excel-file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+                
+                // Parse rows (ignoring header)
+                if (json.length > 1) {
+                    const parsedData = [];
+                    for (let i = 1; i < json.length; i++) {
+                        const row = json[i];
+                        if (!row[0] || !row[1]) continue;
+                        parsedData.push({
+                            proceso: row[0],
+                            subproceso: row[1],
+                            prod: parseFloat(row[2]) || 0,
+                            vol: parseFloat(row[3]) || 0,
+                            horas: parseFloat(row[4]) || 0,
+                            prod2: parseFloat(row[5]) || 0,
+                            efect: parseNum(row[6]),
+                            prodLm: parseFloat(row[7]) || 0,
+                            rend: parseNum(row[8]),
+                            hrsLm: parseFloat(row[9]) || 0,
+                            dif: parseFloat(row[10]) || 0,
+                            cal: parseFloat(row[11]) || 0,
+                            pCal: parseNum(row[12]),
+                            oee: parseNum(row[13])
+                        });
+                    }
+                    if (parsedData.length > 0) {
+                        rawData = parsedData;
+                        currentFilter = 'ALL';
+                        renderTabs();
+                        updateKPIs(rawData);
+                        updateCharts(rawData);
+                        renderTable(rawData);
+                        alert('¡Archivo Excel importado y dashboard actualizado con éxito!');
+                    }
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function parseNum(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            let clean = val.toString().replace('%', '').replace(',', '.');
+            let num = parseFloat(clean);
+            return clean.includes('%') || num > 1 ? num / 100 : num;
+        }
+
+        window.onload = initDashboard;
+    </script>
+</body>
+</html>

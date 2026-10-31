@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+  }
+  
+  code, kbd, samp, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Custom Blue Hand Cursor Requested by User */
+html, body, * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cfilter id='s' x='-20%25' y='-20%25' width='150%25' height='150%25'%3E%3CfeDropShadow dx='1' dy='1.5' stdDeviation='1' flood-color='rgba(0,0,0,0.35)'/%3E%3C/filter%3E%3Cg filter='url(%23s)'%3E%3Cpath d='M10 2 C8.9 2 8 2.9 8 4 L8 16.5 L6.8 14.8 C6 13.7 4.5 13.4 3.4 14.2 C2.3 15 2 16.5 2.8 17.6 L6.5 22.8 C7.8 24.6 9.9 25.7 12.1 25.7 L16 25.7 C18.2 25.7 20.2 24.5 21.2 22.5 L24.3 16.3 C24.8 15.3 24.4 14.1 23.4 13.6 C22.4 13.1 21.2 13.5 20.7 14.5 L19.5 16.9 C19.2 16.3 18.5 15.8 17.7 15.7 C17.3 15.7 16.9 15.8 16.5 16 C16.2 15.3 15.5 14.8 14.7 14.7 C14.3 14.7 13.9 14.8 13.5 15 L13.5 4 C13.5 2.9 12.6 2 11.5 2 L10 2 Z' fill='%23004b87' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M10 4 L11.5 4 L11.5 15.5 L10 15.5 Z' fill='%230284c7' opacity='0.7'/%3E%3C/g%3E%3C/svg%3E") 10 2, auto;
+}
+
+button, a, select, input[type="range"], input[type="checkbox"], input[type="radio"], [role="button"], label[for], .cursor-pointer {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cfilter id='s' x='-20%25' y='-20%25' width='150%25' height='150%25'%3E%3CfeDropShadow dx='1' dy='2' stdDeviation='1.2' flood-color='rgba(0,0,0,0.4)'/%3E%3C/filter%3E%3Cg filter='url(%23s)'%3E%3Cpath d='M10 2 C8.9 2 8 2.9 8 4 L8 16.5 L6.8 14.8 C6 13.7 4.5 13.4 3.4 14.2 C2.3 15 2 16.5 2.8 17.6 L6.5 22.8 C7.8 24.6 9.9 25.7 12.1 25.7 L16 25.7 C18.2 25.7 20.2 24.5 21.2 22.5 L24.3 16.3 C24.8 15.3 24.4 14.1 23.4 13.6 C22.4 13.1 21.2 13.5 20.7 14.5 L19.5 16.9 C19.2 16.3 18.5 15.8 17.7 15.7 C17.3 15.7 16.9 15.8 16.5 16 C16.2 15.3 15.5 14.8 14.7 14.7 C14.3 14.7 13.9 14.8 13.5 15 L13.5 4 C13.5 2.9 12.6 2 11.5 2 L10 2 Z' fill='%230284c7' stroke='%23ffffff' stroke-width='1.8' stroke-linejoin='round'/%3E%3Ccircle cx='10.5' cy='3.5' r='1.5' fill='%23ffffff'/%3E%3C/g%3E%3C/svg%3E") 10 2, pointer !important;
+}
+
+/* 3D and depth utilities */
+.card-3d {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 75, 135, 0.05), 0 2px 4px -2px rgba(0, 75, 135, 0.05), 0 10px 15px -3px rgba(15, 23, 42, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-3d:hover {
+  box-shadow: 0 12px 24px -4px rgba(0, 75, 135, 0.12), 0 4px 6px -2px rgba(0, 75, 135, 0.06);
+}
+
+.card-3d-elevated {
+  background: linear-gradient(145deg, #ffffff, #f1f5f9);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 10px 25px -5px rgba(0, 75, 135, 0.15), 0 8px 10px -6px rgba(0, 75, 135, 0.1);
+}
+
+.bg-wms-blue {
+  background-color: #004b87;
+}
+
+.text-wms-blue {
+  color: #004b87;
+}
+
+.border-wms-blue {
+  border-color: #004b87;
+}
+
+/* Custom scrollbar for white theme */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}

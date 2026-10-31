@@ -1,0 +1,8 @@
+{
+  "name": "Dashboard Operativo WMS",
+  "description": "Dashboard analítico de operaciones WMS con control de productividad, horas, OEE, filtros mensuales y exportación Excel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
